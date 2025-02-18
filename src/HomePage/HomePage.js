@@ -1,6 +1,63 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Pie } from "react-chartjs-2";
+import D3Chart from "../D3Chart/D3Chart";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const HomePage = () => {
+  const [chartData, setChartData] = useState(null);
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:3001/budget");
+
+        const labels = data.myBudget.map((item) => item.title);
+
+        const dataValues = data.myBudget.map((item) => item.budget);
+
+        const formattedData = {
+          labels: labels,
+          datasets: [
+            {
+              data: dataValues,
+              backgroundColor: [
+                "#FF6384",
+                "#36A2EB",
+                "#FFCE56",
+                "#4BC0C0",
+                "#9966FF",
+                "#FF9F40",
+                "#FF6633",
+                "#FF33FF",
+                "#33FF33",
+              ],
+              borderWidth: 1,
+            },
+          ],
+        };
+        setChartData(formattedData);
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+    getData();
+  }, []);
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+  };
+
   return (
     <main className="center" id="main" role="main">
       <section className="page-area">
@@ -65,13 +122,15 @@ const HomePage = () => {
 
         <article>
           <h2>Chart</h2>
-          <p>
-            <canvas id="myChart" width="400" height="400"></canvas>
-          </p>
+          {chartData ? (
+            <Pie data={chartData} options={options} />
+          ) : (
+            <div>Loading chart...</div>
+          )}
         </article>
         <article>
           <h2>D3 Chart</h2>
-          <div id="d3chart"></div>
+          <D3Chart />
         </article>
       </section>
     </main>
